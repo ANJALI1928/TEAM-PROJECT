@@ -1,0 +1,327 @@
+---
+title: "Admission Project"
+author: "TEAM"
+date: '2022-09-28'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+
+<hr>
+
+<span style = "color:#6C3483;font-size:17px"> <b>This dataset is created for prediction of Graduate Admissions from an Indian perspective.This dataset was built with the purpose of helping students in shortlisting universities with their profiles. The predicted output gives them a fair idea about their chances for a particular university.The dataset contains several parameters which are considered important during the application for Masters Programs.</b></span>
+
+<hr>
+
+<b style="font-size:16px;"><u>The parameters included are :</u></b>
+
+<b style="font-size:14px;color:#CD5C5C">
+1)**GRE** Scores ( out of 340 )<br>
+2)**TOEFL** Scores ( out of 120 )<br>
+3)University Rating ( out of 5 )<br>
+4)Statement of Purpose and Letter of Recommendation Strength ( out of 5 )<br>
+5)Undergraduate GPA ( out of 10 )<br>
+6)Research Experience ( either 0 or 1 )<br>
+7)Chance of Admit ( ranging from 0 to 1 )
+</b>
+
+<hr>
+
+
+<b style="font-size:16px;"><u>The following are the packages used in the project :</u></b>
+
+<b style="font-size:14px;color:#239B56">
+1)moments<br>
+2)ggplot2<br>
+3)corrplot<br>
+4)agricolae<br>
+5)RcolorBrewer<br>
+6)PerformanceAnalytics<br>
+7)modeest<br>
+8)car<br>
+9)dplyr<br>
+</b>
+
+<hr>
+
+<b style="font-size:20px;">Reading the dataset</b>
+
+```{r}
+data=read.csv("Admission_Predict.csv")
+summary(data)
+
+gre = data$GRE.Score
+toefl = data$TOEFL.Score
+univ_ra = data$University.Rating
+st_op = data$SOP
+letter_or = data$LOR
+cgpa = data$CGPA
+re_search = data$Research
+coa = data$Chance.of.Admit
+str(data)
+```
+
+
+
+
+
+<pre><b>Research is a discrete variable hence we create a table where -
+0: # of students not opting for research 
+1: # of students opting for research, on the basis of other variables present in the data.</b></pre>
+  
+<hr> 
+  
+  
+<b style="font-size:20px;">Bar Plot of the corresponding Variable</b>
+
+```{r}
+par(bg="#ffffcc")
+R=table(re_search)
+barplot(R/400,col=c("#991f00","#009933"),xlab="STUDENTS",ylab="PROBABILITY")
+```
+
+<hr>
+
+<b style="font-size:20px;">Summary statistics, histogram and density plots for the variables CGPA,SOP,LOR</b>
+
+```{r}
+summary(cgpa)
+library(modeest)
+library(moments)
+mfv(cgpa)
+skewness(cgpa)
+kurtosis(cgpa)
+par(bg="#ffe6ff")
+hist(cgpa,probability = T,col="#cc0052",ylim = c(0,0.7),main = "Histrogram of CGPA",xlab = "CGPA")
+kd=density(cgpa)
+lines(kd,lwd=3,col="black")
+
+hist(st_op,probability = T,col="#669999",main="Histogram for statement of purpose")
+kd=density(st_op)
+lines(kd,lwd=3,col="black")
+
+hist(st_op,probability = T,col="#990073",main="Histogram for Letter of Recommendation")
+kd=density(letter_or)
+lines(kd,lwd=3,col="black")
+```
+
+```{r}
+summary(gre)
+mfv(gre)
+skewness(gre)
+kurtosis(gre)
+```
+
+```{r}
+summary(toefl)
+mean(toefl)
+mfv(toefl)
+skewness(toefl)
+kurtosis(toefl)
+```
+
+**The conclusion drawn from the summary is as follows:**
+
+**1)CGPA is negatively skewed and platykurtic whereas mean ,median,mode are almost in the same range.**
+
+**2)Similarly, GRE Score is negatively skewed and platykurtic whereas median is greater than mean and mode.**
+
+**3)TOEFL Score is negatively skewed and platykurtic whereas mode is greater than mean and median.**
+
+```{r}
+par(mfrow=c(1,2))
+par(bg = "#d6f5f5")
+plot(toefl,coa,col="#ff0055",pch=19,cex=0.5)
+plot(gre,coa,col="#008000",pch=19,cex=0.5)
+```
+
+<b style="font-size:20px;">Now we plot more than type ogive diagram for the variables SOP and LOR</b>
+
+```{r}
+library(agricolae)
+par(mfrow=c(1,2))
+par(bg="#bfff00")
+h=graph.freq(st_op,plot=F,lwd=3)
+points=ogive.freq(h,col="black",frame=F,xlab="STATEMENT OF PURPOSE",ylab="RELATIVE FREQUENCY")
+h=graph.freq(letter_or,plot=F,lwd=3)
+points=ogive.freq(h,col="black",frame=F,xlab="LETTER OF RECOMMENDATION",ylab="RELATIVE FREQUENCY")
+```
+
+
+```{r}
+library(corrplot)
+pairs(data[,2:9],col=rainbow(6))
+M= cor(data[,2:9])
+corrplot(M,method = "color")
+
+```
+
+
+```{r}
+par(mfrow=c(1,2))
+par(bg="#ffe6ff")
+boxplot(gre,col="#ff3300",medcol = "black", boxlty = 0, whisklty = 1, staplelwd = 4, outpch = 8, outcex = 3)
+boxplot(toefl,col="#00802b",medcol = "black", boxlty = 0, whisklty = 1, staplelwd = 4, outpch = 8, outcex = 3)
+```
+
+```{r}
+library(ggplot2)
+library(RColorBrewer)
+
+corrplot(M, type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
+
+```
+
+```{r}
+library("PerformanceAnalytics")
+chart.Correlation(M, histogram=TRUE, pch=19)
+
+```
+
+**The function chart.Correlation()[ in the package PerformanceAnalytics], can be used to display a chart of a correlation matrix.**
+
+**In the above plot:**
+
+**The distribution of each variable is shown on the diagonal.**
+
+**On the bottom of the diagonal : the bivariate scatter plots with a fitted line are displayed**
+
+**On the top of the diagonal : the value of the correlation plus the significance level as stars**
+
+**Each significance level is associated to a symbol:p-values(0, 0.001, 0.01, 0.05, 0.1, 1)<=>symbols(“***”, “**”,  “*”, “.”, " “)**
+
+<b style="font-size:20px;">Now we begin with Regression Analysis</b>
+
+```{r}
+coa=data$Chance.of.Admit
+cgpa=data$CGPA
+gre=data$GRE.Score
+toefl=data$TOEFL.Score
+y=lm(coa~gre,data)
+summary(y)
+
+
+#CHECKING THE ASSUMPTIONS OF LINEAR MODEL
+par(mfrow=c(2,2))
+par(bg="#b3ffff")
+plot(y,col="#002699")
+library(MASS)
+sresid=studres(y)
+shapiro.test(sresid) # The residuals aren't normally distributed
+library(car)
+durbinWatsonTest(y)
+skewness(coa)
+```
+
+```{r}
+y2=lm(formula =(coa) ~ gre ,data = data)
+y4=lm(sqrt(max(coa+1) - coa) ~ gre)
+library(rcompanion)
+
+par(bg="#ffe6e6")
+plotNormalHistogram(sqrt(max(coa+1) - coa),col="#cc0052")
+summary(y4)
+```
+**Here we developed Simple linear model of Chance of Admit on GREScore.We also tested for the assumptions of linear model.The conclusion drawn is the following**
+
+**1)From the Scatter plot matrix  we can say that there exists a linear relationship between Chance of admit and GREScore. Hence, the assumption of linearity between covariate and response is met.**
+
+**2)The fitted values and the residuals doesn't show any specific pattern the residuals have a constant variance.**
+
+**3)From durbin watson test we can conclude that errors are independently distributed.**
+
+**4)From the Shapiro-wilk normality test the output obtained we cannot assume normality. The p-value is lesser than 0.05. Hence, the distribution of the given data is different from normal distribution significantly.We then checked for skewness of Chance of Admit which is negatively skewed .Hence we apply sqrt(max(y+1)-y) transformation on the dependent variable i.e.,Chance of admit. The value of adjusted R-squared increases but residual standard error decreases.Also we plot histogram of the transformed variable which shows that the transformed variable is approximately a normal one.**
+```{r}
+y3=lm(coa~toefl)
+summary(y3)
+par(mfrow=c(2,2))
+par(bg="#ffff00")
+plot(y3,col="#006600")
+sresid=studres(y3)
+shapiro.test(sresid)
+library(car)
+durbinWatsonTest(y3)
+library(moments)
+skewness(toefl)
+y4=lm(sqrt(max(coa+1) - coa)~toefl)
+summary(y4)
+```
+
+```{r}
+par(bg="#e6f7ff")
+plotNormalHistogram(sqrt(max(coa+1) - coa),col="#006699")
+```
+
+```{r}
+library(MASS)
+par(bg="#ffffcc")
+bc=boxcox(coa ~ toefl)
+lambda=bc$x[which.max(bc$y3)]
+lambda
+y4=lm(((coa^2-1)/2) ~ toefl)
+summary(y4)
+```
+
+```{r}
+par(bg="#99ff99")
+plotNormalHistogram(((coa^2-1)/2),col="#004d00")
+```
+
+**Here we developed Simple linear model of  Chance of Admit on TOEFLScore.We also tested for the assumptions of linear model.The conclusion drawn is the following:**
+
+**1)From the Scatter plot matrix  we can say that there exists a linear relationship between Chance of admit and**
+**TOEFL Score. Hence, the assumption of linearity between covariate and response is met.**
+
+**2)The fitted values and the residuals dosent show any specific pattern the residuals have a constant variance.**
+
+**3)From durbin watson test we can conclude that errors are independently distributed.**
+
+**4)From the Shapiro-wilk normality test the output obtained we cannot assume normality. The p-value is lesser than 0.05. Hence, the distribution of the given data is different from normal distribution significantly.We then checked for skewness of Chance of Admit which is negatively skewed .Hence we apply sqrt(max(y+1)-y) transformation on the dependent variable i.e.,Chance of admit.The foolowing transformation increases the value of adjusted R-squared and decreases the residual standard error. Also we plotted a histogram of the transformed variable which shows that the transformed variable is approximately normal  .**
+```{r}
+y6=lm(coa~cgpa)
+summary(y6)
+par(mfrow=c(2,2))
+par(bg="#99ff99")
+plot(y6,col="#006600")
+sresid=studres(y6)
+shapiro.test(sresid)
+durbinWatsonTest(y6)
+skewness(coa)
+y7=lm(sqrt(max(coa+1) - coa)~cgpa)
+summary(y7)
+```
+
+```{r}
+
+par(bg="#ffccff")
+plotNormalHistogram(sqrt(max(coa+1) - coa),col="#4d004d")
+```
+
+**Here we developed Simple linear model of Chance of Admit on CGPA .We also tested for the assumptions of linear model.The conclusion drawn is the following:**
+
+**1)From the Scatter plot matrix  we can say that there exists a linear relationship between Chance of admit and**
+**CGPA. Hence, the assumption of linearity between covariate and response is met.**
+
+**2)The fitted values and the residuals doesn't show any specific pattern the residuals have a constant variance.**
+
+**3)From Durbin Watson test we can conclude that errors are independently distributed.**
+
+**4)From the Shapiro-wilk normality test the output obtained we cannot assume normality. The p-value is lesser than 0.05. Hence, the distribution of the given data is different from normal distribution significantly.We then checked for skewness of Chance of Admit which is negatively skewed .Hence we apply sqrt(max(y+1)-y) transformation on the dependent variable i.e.,Chance of admit.The above transformation significantly increases the value of adjusted R-squared and decreases the residual standard error.Also the plotted histogram of the transformed variable is approximately a normal one.**
+
+**CONCLUSION:**
+
+**1)The given dataset also known as "Graduate admission prediction dataset" has information of scores of prestigious exams like GRE , TOEFL and the CGPA scored by 400 students in their undergraduate. Here we have tried to uncover patterns and relationships between the above variables through visualization which might have been difficult to found.**
+
+**2)Mainly R-Software has been used in the above data analysis.It was clear from the plots was that chance of admission of a student to a prestigious university is highly positively correlated with factors like GRE Score ,TOEFL score and CGPA hence this motivated us to perform simple linear regression for the same.**
+
+**3) Here considering Chance of admission as the dependent variable we took GRE score , TOEFL score and CGPA to be the independent one and developed three simple linear regression model. After the model was developed we checked for the validity of the assumptions of simple linear model and also analysed its accuracy. As one of the assumption failed to satisfy hence we preffered to apply transformation on the dependent variable based on the summary statistic of the dependent variable and suitably chose a transformation according to the result.The transformation we applied in turn improved the accuracy of the model.**
+
+**4)Another conclusion drawn is that CGPA is most effective in predicting the chance of Admission of a student to a university as the simple linear model of Chance of Admit on CGPA has adjusted R-squared of 0.7713 which means 77.13 of the variation in Chance of admission can be explained by CGPA.The Residual standard error is also quite low. Also the coefficients of our model is highly significant which implies that our model is a good fit.**  
+
+
